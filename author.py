@@ -52,10 +52,7 @@ EDITOR_SYS_PROMPT = (
 )
 
 CREATOR_SYS_PROMPT = (
-    "You are a helpful content creator."
-    "TASK: Review the users ask and create a brand new original  story. You accept feedback and suggestions,\n"
-    "Produce refined drafts while preserving the author's intent.\n"
-    "When asked to revise, return only the full revised content (no commentary).\n"
+    "You are a helpful content creator. Your task is to take a story suggestion from the user and write an original story based on it. You should then accept feedback and suggestions to refine the draft while preserving the author's intent. When asked to revise, return only the full revised content (no commentary)."
 )
 
 # ---------- State ----------
@@ -163,15 +160,27 @@ def creator_node(state: DocState) -> DocState:
 
     if iteration == 0 and not content:
         print_divider("WELCOME — Content Creator")
-        initial = read_multiline(
-            "Paste your idea below.\n"
+        suggestion = read_multiline(
+            "What story would you like to create? Provide a suggestion or idea.\n"
             "Type /done when finished."
         )
-        if not initial:
-            print("No content entered. Exiting.")
+        if not suggestion:
+            print("No suggestion entered. Exiting.")
             return {"approved": True}
-        print("\nThanks! Sending to the Editor for review...\n")
-        return {"content": initial}
+
+        # Generate the initial story
+        prompt = (
+            f"{CREATOR_SYS_PROMPT}\n\n"
+            f"Here is the user's suggestion: {suggestion}\n\n"
+            f"Please write a story based on this suggestion."
+        )
+        try:
+            initial_content = CREATOR_LLM.invoke(prompt).content
+            print("\nGenerated initial story. Sending to the Editor for review...\n")
+            return {"content": initial_content, "iteration": iteration + 1}
+        except Exception as e:
+            print("Error during initial story generation:", e)
+            return {"approved": True}
 
     # After the editor has suggested changes
     print_divider("EDITOR SUGGESTIONS")
