@@ -10,15 +10,14 @@ Features
 
 Setup
 1) Python 3.10+
-2) pip install -U langgraph langchain langchain-google-genai google-generativeai
-3) Export your Google API key (Gemini):
-   macOS/Linux:  export GOOGLE_API_KEY="<your-key>"
-   Windows CMD:  setx GOOGLE_API_KEY "<your-key>"
+2) pip install -U langgraph langchain langchain-google-genai python-dotenv
+3) Create a .env file in the same directory as this script and add your Google API key:
+   GOOGLE_API_KEY="<your-key>"
 4) Run: python langgraph_gemini_terminal_ai_assistant.py
 
 Notes
 - If you want faster/cheaper runs use model="gemini-1.5-flash".
-- This script is intentionally single-file and terminal-first.
+- This script is intentionally single-file and terminal-first
 """
 
 from __future__ import annotations
@@ -28,6 +27,7 @@ import sys
 import time
 import difflib
 from typing import TypedDict, Optional
+from dotenv import load_dotenv
 
 # LangGraph & LLM
 from langgraph.graph import StateGraph, START, END
@@ -90,18 +90,22 @@ def parse_editor_response(text: str) -> tuple[str, str]:
         return (text.strip(), "")
     if sugg_idx < rew_idx:
         suggestions = text[sugg_idx:rew_idx].strip()
-        rewritten = text[rew_idx + len("### REWRITTEN"):].strip()
+        rewritten = text[rew_idx + len("### REWRITTEN"):
+].strip()
     else:
         # unexpected order; try swap
         rewritten = text[rew_idx:sugg_idx].strip()
-        suggestions = text[sugg_idx + len("### SUGGESTIONS"):].strip()
+        suggestions = text[sugg_idx + len("### SUGGESTIONS"):
+].strip()
     # Clean headers if still present
     for hdr in ("### SUGGESTIONS", "### Suggestions"):
         if suggestions.startswith(hdr):
-            suggestions = suggestions[len(hdr):].strip()
+            suggestions = suggestions[len(hdr):
+].strip()
     for hdr in ("### REWRITTEN", "### Rewritten"):
         if rewritten.startswith(hdr):
-            rewritten = rewritten[len(hdr):].strip()
+            rewritten = rewritten[len(hdr):
+].strip()
     return suggestions, rewritten
 
 
@@ -320,6 +324,7 @@ def build_graph():
 # ---------- Main ----------
 
 def main():
+    load_dotenv()
     if not os.environ.get("GOOGLE_API_KEY"):
         print("WARNING: GOOGLE_API_KEY is not set. Set it to use Gemini.")
 
